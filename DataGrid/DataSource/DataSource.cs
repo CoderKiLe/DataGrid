@@ -74,6 +74,57 @@ namespace DataGrid.DataSource
             }
         }
 
+        public DataTable GetAllTasksAsDataTable()
+        {
+            var dataTable = new DataTable("Tasks");
+
+
+            try
+            {
+                // defining the column in the data table
+                dataTable.Columns.AddRange(new[]
+                {
+                    new DataColumn("Id", typeof(string)),
+                    new DataColumn("Title", typeof(string)),
+                    new DataColumn("Description", typeof(string)),
+                    new DataColumn("DueDate", typeof(DateTime)),
+                    new DataColumn("Priority", typeof(string)),
+                    new DataColumn("IsComplete", typeof(bool))
+                });
+
+
+                using var command = _connection.CreateCommand();
+                command.CommandText = "SELECT * FROM Tasks";
+
+                _connection.Open();
+                using var reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    // defing the row in the data table
+                    var row = dataTable.NewRow();
+
+                    row["Id"] = reader.IsDBNull(0) ? DBNull.Value : reader.GetString(0);
+                    row["Title"] = reader.IsDBNull(1) ? DBNull.Value : reader.GetString(1);
+                    row["Description"] = reader.IsDBNull(2) ? DBNull.Value : reader.GetString(2);
+                    row["DueDate"] = reader.IsDBNull(3) ? DBNull.Value : DateTime.Parse(reader.GetString(3));
+                    row["Priority"] = reader.IsDBNull(4) ? DBNull.Value : reader.GetString(4);
+                    row["IsComplete"] = reader.IsDBNull(5) ? DBNull.Value : (reader.GetInt32(5) == 1);
+
+                    dataTable.Rows.Add(row);
+                }
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine($"error: {e}");
+            }
+            finally
+            {
+                _connection.Close();
+            }
+            return dataTable;
+        }
+
         private void ExecuteNonQuery(SqliteCommand command)
         {
             try
